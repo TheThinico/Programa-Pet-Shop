@@ -18,7 +18,7 @@ def set_database_datas(dictionary_data):
         print("ERRO: dados não foram cadastrados")
 
 
-uri = "mongodb+srv://thiago:mPKueWWlKg2MsWhk@cluster0.164lard.mongodb.net/?appName=Cluster0"
+uri = "mongodb+srv://***:**************@*****.164lard.mongodb.net/?appName=******"
 
 client = MongoClient(uri, server_api=ServerApi('1'))
 
