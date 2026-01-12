@@ -24,9 +24,11 @@ def cadastrar_cliente():
         "cpf": cpf
     }
 
-    cliente = banco_de_dados.conectar_banco()
-    banco_de_dados.salvar_dados_banco(cliente, "cadastro", novo_cliente)
-    clientes.append(cliente)
+    link = banco_de_dados.conectar_banco()
+    banco_de_dados.salvar_dados_banco(link, "cadastro", novo_cliente)
+
+    #clientes.append(cliente)
+
     print("✅ Cliente cadastrado com sucesso!\n")
 
 # Opção 2
@@ -34,7 +36,10 @@ def agendar_banho_tosa():
     print("\n🛁 AGENDAMENTO BANHO E TOSA")
 
     nome_cliente = input("Nome do cliente: ")
-    cliente = buscar_cliente(nome_cliente)
+    #cliente = buscar_cliente(nome_cliente)
+
+    link = banco_de_dados.conectar_banco()
+    cliente = banco_de_dados.pesquisar_usuario(link, nome_cliente, "nome" )
 
     if not cliente:
         print("❌ Cliente não cadastrado! Cadastre primeiro.\n")
@@ -106,8 +111,9 @@ def relatorio_consultas():
         )
     print()
 
+#    ---------------------------
+# funções auxiliares
 
-# outros
 def buscar_cliente(nome):
     for cliente in clientes:
         if cliente["nome"].lower() == nome.lower():

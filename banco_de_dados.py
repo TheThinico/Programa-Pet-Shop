@@ -29,7 +29,8 @@ def conectar_banco(user_name = None, pass_word = None):
     except Exception as e:
         print(e)
 
-#selecionando banco de dados e insere os dados na tabela
+# salva informação no bando de dados
+# precisa inserir QUAL lugar do banco (tabela) deseja colocar
 def salvar_dados_banco(cliente, tabela, dicionario):
     mydb = cliente["banco"]
     mycol = mydb[tabela]
@@ -42,11 +43,31 @@ def salvar_dados_banco(cliente, tabela, dicionario):
     except:
         print("ERRO: dados não foram cadastrados")
 
+# faz pesquisa no banco de dados (pode haver falhas se houver informações semelhantes)
+# retorna JSON/Dicionário
+def pesquisar_dados_banco(cliente, tabela, informacao, chave = None):
+    mydb = cliente["banco"]
+    mycol = mydb[tabela]
+
+    for x in mycol.find({chave: informacao}):
+        print (x)
+
+# faz pesquisa de USUARIO no banco
+# retorna uma lista de JSON/Dicionário
+def pesquisar_usuario(cliente, informacao, chave = None):
+    mydb = cliente["banco"]
+    mycol = mydb["usuarios"]
+
+    list = []
+    for x in mycol.find({chave: informacao}):
+        list.append(x)
+    return list
+
 #    ---------------------------
-# CODIGO LEGADO
+# CODIGO LEGADO - não utilizar
 
 #faz o login no bando de dados
-def database_login():
+def database_login(database_username, database_password):
     print("Logando no Banco: ", end="")
     try:
         uri = f"mongodb+srv://{database_username}:{database_password}@cluster0.164lard.mongodb.net/?appName=Cluster0"
@@ -66,7 +87,7 @@ def database_login():
         print(e)
 
 #selecionando banco de dados e insere os dados na tabela
-def save_database_datas(dictionary_data):
+def save_database_datas(client, dictionary_data):
     mydb = client["banco"]
     mycol = mydb["cadastro"]
 
