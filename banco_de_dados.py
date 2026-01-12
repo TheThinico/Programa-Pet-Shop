@@ -9,6 +9,7 @@ def dados_login_banco():
     password = (input("SENHA: "))
     return username, password
 
+
 #faz o login no bando de dados
 def conectar_banco(user_name = None, pass_word = None):
     print("Conectando ao banco: ", end="")
@@ -29,6 +30,7 @@ def conectar_banco(user_name = None, pass_word = None):
     except Exception as e:
         print(e)
 
+
 # salva informação no bando de dados
 # precisa inserir QUAL lugar do banco (tabela) deseja colocar
 def salvar_dados_banco(cliente, tabela, dicionario):
@@ -43,6 +45,7 @@ def salvar_dados_banco(cliente, tabela, dicionario):
     except:
         print("ERRO: dados não foram cadastrados")
 
+
 # faz pesquisa no banco de dados (pode haver falhas se houver informações semelhantes)
 # retorna JSON/Dicionário
 def pesquisar_dados_banco(cliente, tabela, informacao, chave = None):
@@ -51,6 +54,7 @@ def pesquisar_dados_banco(cliente, tabela, informacao, chave = None):
 
     for x in mycol.find({chave: informacao}):
         print (x)
+
 
 # faz pesquisa de USUARIO no banco
 # retorna uma lista de JSON/Dicionário
@@ -62,6 +66,11 @@ def pesquisar_usuario(cliente, informacao, chave = None):
     for x in mycol.find({chave: informacao}):
         list.append(x)
     return list
+
+
+
+
+
 
 #    ---------------------------
 # CODIGO LEGADO - não utilizar
