@@ -1,14 +1,13 @@
-from asyncio.windows_events import NULL
-
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
+
+from pymongo.errors import DuplicateKeyError
 
 #caso não tenha dados de login
 def dados_login_banco():
     username = (input("NOME: "))
     password = (input("SENHA: "))
     return username, password
-
 
 #faz o login no bando de dados
 def conectar_banco(user_name = None, pass_word = None):
@@ -27,12 +26,62 @@ def conectar_banco(user_name = None, pass_word = None):
         client.admin.command('ping')
         print("Ping enviado. Conecção com MongoDB feita com Sucesso!")
         return client
+
     except Exception as e:
         print(e)
 
+#    ---------------------------
 
-# salva informação no bando de dados
-# precisa inserir QUAL lugar do banco (tabela) deseja colocar
+
+# cadastra um USUARIO no banco de dados.
+def salvar_usuario_banco(cliente, dicionario):
+    # Banco e Tabela pré selecionado. Da erro se cadastrar CPF existente.
+
+    mydb = cliente["banco"]
+    mycol = mydb["cadastro"]
+
+    mycol.create_index("cpf", unique=True)
+
+    try:
+        x = mycol.insert_one(dicionario)
+        #print(x)
+        print(x.inserted_id)
+        print("Dados Cadastrados com Sucesso")
+    except DuplicateKeyError:
+        print("ERRO: CPF ja cadastrado")
+    except Exception as e:
+        print("ERRO: dados não foram cadastrados")
+        print (e)
+
+# faz pesquisa no banco de dados
+def pesquisar_dados_banco(cliente, tabela, informacao,  chave = None):
+    #(pode haver falhas se houver informações semelhantes). Retorna JSON/Dicionário
+
+    mydb = cliente["banco"]
+    mycol = mydb[tabela]
+
+    for x in mycol.find({chave: informacao}):
+        print (x)
+
+# faz pesquisa de USUARIO no banco.
+def pesquisar_usuario(cliente, informacao):
+    #Retorna uma lista de JSON/Dicionário
+
+    mydb = cliente["banco"]
+    mycol = mydb["cadastro"]
+
+    for x in mycol.find({"cpf": informacao}):
+        print (x)
+        return x
+
+def checar_usuario():
+    pass
+
+
+#    ---------------------------
+
+
+# salva informação no bando de dados. Precisa inserir QUAL lugar do banco (tabela) deseja colocar
 def salvar_dados_banco(cliente, tabela, dicionario):
     mydb = cliente["banco"]
     mycol = mydb[tabela]
@@ -42,32 +91,10 @@ def salvar_dados_banco(cliente, tabela, dicionario):
         print(x)
         print(x.inserted_id)
         print("Dados Cadastrados com Sucesso")
+
     except Exception as e:
         print("ERRO: dados não foram cadastrados")
         print (e)
-
-# faz pesquisa no banco de dados (pode haver falhas se houver informações semelhantes)
-# retorna JSON/Dicionário
-def pesquisar_dados_banco(cliente, tabela, informacao, chave = None):
-    mydb = cliente["banco"]
-    mycol = mydb[tabela]
-
-    for x in mycol.find({chave: informacao}):
-        print (x)
-
-
-# faz pesquisa de USUARIO no banco
-# retorna uma lista de JSON/Dicionário
-def pesquisar_usuario(cliente, informacao, chave = None):
-    mydb = cliente["banco"]
-    mycol = mydb["usuarios"]
-
-    list = []
-    for x in mycol.find({chave: informacao}):
-        list.append(x)
-    return list
-
-
 
 
 

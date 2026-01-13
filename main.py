@@ -25,7 +25,7 @@ def cadastrar_cliente():
     }
 
     link = banco_de_dados.conectar_banco()
-    banco_de_dados.salvar_dados_banco(link, "cadastro", novo_cliente)
+    banco_de_dados.salvar_usuario_banco(link, novo_cliente)
 
     #clientes.append(cliente)
 
@@ -39,7 +39,7 @@ def agendar_banho_tosa():
     #cliente = buscar_cliente(nome_cliente)
 
     link = banco_de_dados.conectar_banco()
-    cliente = banco_de_dados.pesquisar_usuario(link, nome_cliente, "nome" )
+    cliente = banco_de_dados.pesquisar_usuario(link, nome_cliente, "nome")
 
     if not cliente:
         print("❌ Cliente não cadastrado! Cadastre primeiro.\n")
@@ -114,11 +114,31 @@ def relatorio_consultas():
 #    ---------------------------
 # funções auxiliares
 
+# Opção 5
+def buscar_usuario(link = None, retorna_dados = False):
+
+    link = banco_de_dados.conectar_banco()
+    if link != None:
+        x = banco_de_dados.pesquisar_usuario(link, input("cpf: "))
+        print (x["nome"])
+        if retorna_dados:
+            return x
+        #print(banco_de_dados.pesquisar_usuario(link, input("cpf: ")) )
+
+def validar_cpf(cpf):
+    cpf = cpf.replace(".", "").replace("-", "")
+    return cpf.isdigit() and len(cpf) == 11
+
+def validar_nome():
+    pass
+
+
 def buscar_cliente(nome):
     for cliente in clientes:
         if cliente["nome"].lower() == nome.lower():
             return cliente
     return None
+
 
 #    ---------------------------
 
@@ -129,6 +149,7 @@ def menu():
         print("2 - Agendamento Banho e Tosa")
         print("3 - Agendamento Clínico")
         print("4 - Relatório de Consultas")
+        print("5 - Pesquisar Usuario (TESTES)")
         print("0 - Sair")
 
         opcao = input("Escolha uma opção: ")
@@ -141,6 +162,8 @@ def menu():
             agendar_clinico()
         elif opcao == "4":
             relatorio_consultas()
+        elif opcao == "5":
+            buscar_usuario()
         elif opcao == "0":
             print("👋 Saindo do sistema...")
             break
