@@ -29,7 +29,7 @@ def cadastrar_cliente():
 
     #clientes.append(cliente)
 
-    print("✅ Cliente cadastrado com sucesso!\n")
+    #print("✅ Cliente cadastrado com sucesso!\n")
 
 # Opção 2
 def agendar_banho_tosa():

@@ -25,7 +25,7 @@ def conectar_banco(user_name = None, pass_word = None):
     client = MongoClient(uri, server_api=ServerApi('1'))
     try:
         client.admin.command('ping')
-        print("Pinged your deployment. You successfully connected to MongoDB!")
+        print("Ping enviado. Conecção com MongoDB feita com Sucesso!")
         return client
     except Exception as e:
         print(e)
@@ -38,13 +38,13 @@ def salvar_dados_banco(cliente, tabela, dicionario):
     mycol = mydb[tabela]
 
     try:
-        x = mycol.insert(dicionario)
+        x = mycol.insert_one(dicionario)
         print(x)
-        print(x.inserted_ids)
+        print(x.inserted_id)
         print("Dados Cadastrados com Sucesso")
-    except:
+    except Exception as e:
         print("ERRO: dados não foram cadastrados")
-
+        print (e)
 
 # faz pesquisa no banco de dados (pode haver falhas se houver informações semelhantes)
 # retorna JSON/Dicionário
