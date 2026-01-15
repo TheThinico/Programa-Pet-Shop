@@ -5,6 +5,7 @@ import banco_de_dados
 clientes = []
 agendamentos_banho_tosa = []
 agendamentos_clinicos = []
+banco = banco_de_dados.db()
 
 #    ---------------------------
 
@@ -24,8 +25,7 @@ def cadastrar_cliente():
         "cpf": cpf
     }
 
-    link = banco_de_dados.conectar_banco()
-    banco_de_dados.salvar_usuario_banco(link, novo_cliente)
+    banco_de_dados.salvar_usuario_banco(banco.client, novo_cliente)
 
     #clientes.append(cliente)
 
@@ -38,8 +38,7 @@ def agendar_banho_tosa():
     nome_cliente = input("Nome do cliente: ")
     #cliente = buscar_cliente(nome_cliente)
 
-    link = banco_de_dados.conectar_banco()
-    cliente = banco_de_dados.pesquisar_usuario(link, nome_cliente, "nome")
+    cliente = banco_de_dados.pesquisar_usuario(banco, nome_cliente, "nome")
 
     if not cliente:
         print("❌ Cliente não cadastrado! Cadastre primeiro.\n")
@@ -59,9 +58,10 @@ def agendar_banho_tosa():
         "porte": porte,
         "data_hora": data_hora
     }
-
+    #   -----Mudar esse Trecho
     agendamentos_banho_tosa.append(agendamento)
     print("✅ Banho e tosa agendado com sucesso!\n")
+    #   -----
 
 # Opção 3
 def agendar_clinico():
@@ -90,14 +90,16 @@ def agendar_clinico():
         "motivo": motivo,
         "data_hora": data_hora
     }
-
+    #   -----Mudar esse Trecho
     agendamentos_clinicos.append(agendamento)
     print("✅ Consulta clínica agendada com sucesso!\n")
+    #   -----
 
 # Opção 4
 def relatorio_consultas():
     print("\n📊 RELATÓRIO DE CONSULTAS CLÍNICAS\n")
 
+    #   -----Mudar esse Trecho
     if not agendamentos_clinicos:
         print("Nenhuma consulta clínica agendada.\n")
         return
@@ -110,20 +112,22 @@ def relatorio_consultas():
             f"Motivo: {ag['motivo']}"
         )
     print()
+    #   -----
 
 #    ---------------------------
 # funções auxiliares
 
 # Opção 5
-def buscar_usuario(link = None, retorna_dados = False):
 
-    link = banco_de_dados.conectar_banco()
-    if link != None:
-        x = banco_de_dados.pesquisar_usuario(link, input("cpf: "))
-        print (x["nome"])
-        if retorna_dados:
-            return x
-        #print(banco_de_dados.pesquisar_usuario(link, input("cpf: ")) )
+# Nome auto-explicativo. Se mandar True, ele retorna o Dicionario do usuario
+def buscar_usuario(retorna_dados = False):
+    x = banco_de_dados.pesquisar_usuario(banco.client, input("cpf: "))
+
+    if retorna_dados:
+        return x
+    else:
+        print(x["nome"])
+    #print(banco_de_dados.pesquisar_usuario(link, input("cpf: ")) )
 
 def validar_cpf(cpf):
     cpf = cpf.replace(".", "").replace("-", "")
@@ -132,13 +136,11 @@ def validar_cpf(cpf):
 def validar_nome():
     pass
 
-
 def buscar_cliente(nome):
     for cliente in clientes:
         if cliente["nome"].lower() == nome.lower():
             return cliente
     return None
-
 
 #    ---------------------------
 

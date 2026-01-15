@@ -1,0 +1,23 @@
+# PyCharm
+.idea/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+
+# Ambiente / variáveis
+.env
+
+# Logs
+*.log
+
+# MongoDB (se usar arquivos locais)
+data/
+dump/
+
+Legado/
+Outdated/
