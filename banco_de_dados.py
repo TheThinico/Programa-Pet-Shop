@@ -3,10 +3,16 @@ from pymongo.server_api import ServerApi
 
 from pymongo.errors import DuplicateKeyError
 
+
+
 #    ---------------------------
 #   Classe de link pro banco
 
 class db:
+    """
+        Classe de conecção com banco de dados.
+        Use ele para chamar funções que exijam pesquisa com o banco de dados.
+    """
     def __init__(self):
         self.client = None
         self.conectar_banco()
@@ -42,7 +48,15 @@ class db:
 
 # cadastra um USUARIO no banco de dados.
 def salvar_usuario_banco(cliente, dicionario):
-    # Banco e Tabela pré selecionado. Da erro se cadastrar CPF existente.
+    """
+    Salva um usuario no banco de dados.
+    Banco e Tabela pré selecionado.
+    Da erro se cadastrar CPF existente no sistema.
+
+    :param cliente: Link com o banco de dados
+    :param dicionario: Dicionario com dados do usuário.
+    """
+    #
 
     mydb = cliente["banco"]
     mycol = mydb["cadastro_usuario"]
@@ -61,8 +75,16 @@ def salvar_usuario_banco(cliente, dicionario):
         print (e)
 
 # cadastra o Animal no banco de dados.
-def salvar_pet_banco(cliente, dicionario, dono):
-    # Banco e Tabela pré selecionado.
+def salvar_animal_banco(cliente, dicionario, dono):
+    """
+    Salva um animal no banco de dados.
+    Banco e Tabela pré selecionado.
+    Obrigatório identificar seu tutor e respectivo CPF.
+
+    :param cliente: Link com o banco de dados
+    :param dicionario: Dicionario com dados do animal.
+    :param dono: Dicionario do tutor do animal (somente o CPF é necessário)
+    """
 
     mydb = cliente["banco"]
     mycol = mydb["cadastro_animal"]
@@ -78,34 +100,91 @@ def salvar_pet_banco(cliente, dicionario, dono):
         print("ERRO: dados não foram cadastrados")
         print (e)
 
+def salvar_consulta(cliente, dicionario, dono, animal):
+    """
+    Salva um animal no banco de dados.
+    Banco e Tabela pré selecionado.
+    Obrigatório identificar seu tutor e respectivo CPF.
+
+    :param cliente: Link com o banco de dados.
+    :param dono: Dicionario do tutor do animal.
+    :param animal: Dicionario com dados do animal.
+    """
+    mydb = cliente["banco"]
+    mycol = mydb["cadastro_usuario"]
+
+    dicionario.update(
+        {"tutor_cpf": dono["cpf"], "animal_nome": animal["nome"]}
+    )
+
+    try:
+        x = mycol.insert_one(dicionario)
+        #print(x)
+        print(x.inserted_id)
+        print("Dados Cadastrados com Sucesso")
+    except Exception as e:
+        print("ERRO: dados não foram cadastrados")
+        print (e)
+    pass
+
+
 #    ---------------------------
 #   Funções de Pesquisar
 
 # faz pesquisa de USUARIO no banco.
-def pesquisar_usuario(cliente, informacao):
-    #Retorna uma lista de JSON/Dicionário
+def pesquisar_usuario(cliente, informacao, return_info = False):
+    """
+        Busoca dados de um Usuario. Pode retornar os dados em JSON/Dicionário.
+
+        :param cliente: Link com o banco de dados
+        :param informacao: Informação que deseja localizar alguém (por padrão é o CPF)
+        :param return_info: Se True ele retorna o usuário
+        :return: Resultado da soma
+    """
 
     mydb = cliente["banco"]
     mycol = mydb["cadastro_usuario"]
 
     for x in mycol.find({"cpf": informacao}):
         print (x)
-        if x != None:
+        if x != None and return_info == True:
             return x
-    print("Usuario Não Cadastrado")
+    print("Usuario Não Encontrado")
 
-def pesquisar_animal(cliente, informacao):
-    #Retorna uma lista de JSON/Dicionário
+def pesquisar_pet(cliente, dono, informacao):
+    """
+        Busca dados de um animal. Pode retornar uma lista de dados, em JSON/Dicionário.
 
+        :param cliente: Link com o banco de dados.
+        :param informacao: Informação que deseja localizar alguém (por padrão é o CPF).
+        :param return_user: Se True ele retorna o usuário.
+        :return: Retorna uma Lista de Dicionários de animais encontrado.
+    """
     mydb = cliente["banco"]
     mycol = mydb["cadastro_animal"]
 
     for x in mycol.find({"cpf": informacao}):
-        print (x)
+        print (x["nome"])
         return x
 
-def checar_usuario():
-    pass
+def pesquisar_consulta(cliente, informacao, return_info = False):
+    """
+        Busca dados de um usuario. Pode retornar os dados em JSON/Dicionário se "return_info" for True.
+
+        :param cliente: Link com o banco de dados.
+        :param informacao: Informação que deseja localizar alguém (por padrão é o CPF).
+        :param return_info: Se True, a função retornará o usuário.
+        :return: Resultado da soma
+    """
+
+    mydb = cliente["banco"]
+    mycol = mydb["cadastro_consulta"]
+
+    for x in mycol.find({"cpf": informacao}):
+        print (x)
+        if x != None and return_info == True:
+            return x
+    print("Usuario Não Encontrado")
 
 #    ---------------------------
 #   Funções de Referencia
@@ -119,7 +198,6 @@ def pesquisar_dados_banco(cliente, tabela, informacao,  chave = None):
 
     for x in mycol.find({chave: informacao}):
         print (x)
-
 
 # salva informação no bando de dados. Precisa inserir QUAL lugar do banco (tabela) deseja colocar
 def salvar_dados_banco(cliente, tabela, dicionario):
