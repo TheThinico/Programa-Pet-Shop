@@ -5,31 +5,95 @@ import banco_de_dados
 clientes = []
 agendamentos_banho_tosa = []
 agendamentos_clinicos = []
+
 banco = banco_de_dados.db()
 
-#    ---------------------------
+class usuario:
+    def __init__(self,nome,telefone,email,cpf):
+        self.nome = nome
+        self.telefone = telefone
+        self.email = email
+        self.cpf = cpf
+
+    def to_dict(self):
+        return {
+            "nome": self.nome,
+            "telefone": self.telefone,
+            "email": self.email,
+            "cpf": self.cpf,
+        }
+
+class animal:
+    def __init__(self,nome,tipo,raca,idade,tutor_cpf):
+        self.nome = nome
+        self.tipo = tipo
+        self.raca = raca
+        self.idade = idade
+        self.tutor_cpf = tutor_cpf
+
+    def to_dict(self):
+        return {
+            "nome": self.nome,
+            "tipo": self.tipo,
+            "raca": self.raca,
+            "idade": self.idade,
+            "tutor_cpf": self.tutor_cpf,
+        }
+
+# ================= CLIENTES =================
 
 # Opção 1
 def cadastrar_cliente():
     print("\n👤 CADASTRO DE CLIENTE")
+    novo_cliente = None
+    choice = input("Possui cadastro? S ou N: ")
 
-    nome = input("Nome do cliente: ")
-    telefone = input("Telefone: ")
-    email = input("E-mail: ")
-    cpf = input("CPF: ")
+    if choice == "N" or choice == "n":
+        print(f"Sua opção: {choice}")
+        nome = input("Nome do cliente: ")
+        telefone = input("Telefone: ")
+        email = input("E-mail: ")
+        cpf = validar_cpf(input("CPF: "))
 
-    novo_cliente = {
-        "nome": nome,
-        "telefone": telefone,
-        "email": email,
-        "cpf": cpf
-    }
+        novo_cliente = usuario(nome,telefone,email,cpf)
+        banco_de_dados.salvar_usuario_banco(banco.client, novo_cliente.to_dict())
+    elif choice == "S" or choice == "s":
+        novo_cliente = buscar_usuario(True)
+        if novo_cliente == None:
+            return
+    else:
+        print("Opção não encontrada")
+        return
 
-    banco_de_dados.salvar_usuario_banco(banco.client, novo_cliente)
-
+    print("registrar animal:")
+    cadastrar_animal(novo_cliente)
     #clientes.append(cliente)
-
     #print("✅ Cliente cadastrado com sucesso!\n")
+
+def cadastrar_animal(tutor):
+    print("\n👤 CADASTRO DE ANIMAL")
+
+    nome = input("Nome do animal: ")
+    tipo = input("tipo de animal: ")
+    idade = input("idade: ")
+    raca = input("raça: ")
+    tutor_cpf = tutor.cpf
+
+    novo_animal = animal(nome,tipo,raca,idade,tutor_cpf)
+
+    banco_de_dados.salvar_animal_banco(banco.client,novo_animal)
+
+    # clientes.append(novo_animal)
+    # print("✅ Cliente cadastrado com sucesso!\n")
+
+def validar_cpf(cpf):
+    cpf = cpf.replace(".", "").replace("-", "")
+    return cpf.isdigit() and len(cpf) == 11
+
+def validar_nome():
+    pass
+
+# ================= AGENDAMENTOS =================
 
 # Opção 2
 def agendar_banho_tosa():
@@ -95,6 +159,27 @@ def agendar_clinico():
     print("✅ Consulta clínica agendada com sucesso!\n")
     #   -----
 
+def consultar_horarios():
+    print("\n⏰ HORÁRIOS JÁ AGENDADOS\n")
+
+    todos_agendamentos = agendamentos_banho_tosa + agendamentos_clinicos
+
+    if not todos_agendamentos:
+        print("Nenhum horário agendado. Todos estão disponíveis!\n")
+        return
+
+    for ag in sorted(todos_agendamentos, key=lambda x: x["data_hora"]):
+        print(
+            f"{ag['data_hora'].strftime('%d/%m/%Y %H:%M')} | "
+            f"Tipo: {ag['tipo']} | "
+            f"Cliente: {ag['cliente']['nome']} | "
+            f"Pet: {ag['pet']}"
+        )
+    print()
+
+
+# ================= RELATÓRIOS =================
+
 # Opção 4
 def relatorio_consultas():
     print("\n📊 RELATÓRIO DE CONSULTAS CLÍNICAS\n")
@@ -114,27 +199,18 @@ def relatorio_consultas():
     print()
     #   -----
 
-#    ---------------------------
-# funções auxiliares
-
-# Opção 5
-
-# Nome auto-explicativo. Se mandar True, ele retorna o Dicionario do usuario
+# Opção 7
 def buscar_usuario(retorna_dados = False):
-    x = banco_de_dados.pesquisar_usuario(banco.client, input("cpf: "))
+    x = banco_de_dados.pesquisar_usuario(banco.client, input("informe o cpf: "), True)
 
     if retorna_dados:
         return x
     else:
-        print(x["nome"])
+        for chave, valor in x:
+            print(f"{chave} : {valor}")
+
+
     #print(banco_de_dados.pesquisar_usuario(link, input("cpf: ")) )
-
-def validar_cpf(cpf):
-    cpf = cpf.replace(".", "").replace("-", "")
-    return cpf.isdigit() and len(cpf) == 11
-
-def validar_nome():
-    pass
 
 def buscar_cliente(nome):
     for cliente in clientes:
@@ -142,7 +218,7 @@ def buscar_cliente(nome):
             return cliente
     return None
 
-#    ---------------------------
+# ================= MENU =================
 
 def menu():
     while True:
@@ -150,8 +226,10 @@ def menu():
         print("1 - Cadastro de Cliente")
         print("2 - Agendamento Banho e Tosa")
         print("3 - Agendamento Clínico")
-        print("4 - Relatório de Consultas")
-        print("5 - Pesquisar Usuario (TESTES)")
+        print("4 - Relatório de Consultas Clínicas")
+        print("5 - Consultar Horários Disponíveis")
+        print("6 - Consultar Cliente Cadastrado")
+        print("7 - Pesquisar Usuario (TESTES)")
         print("0 - Sair")
 
         opcao = input("Escolha uma opção: ")
@@ -165,6 +243,10 @@ def menu():
         elif opcao == "4":
             relatorio_consultas()
         elif opcao == "5":
+            consultar_horarios()
+        elif opcao == "6":
+            listar_clientes()
+        elif opcao == "7":
             buscar_usuario()
         elif opcao == "0":
             print("👋 Saindo do sistema...")
