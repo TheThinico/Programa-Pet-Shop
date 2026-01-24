@@ -45,43 +45,34 @@ class animal:
 # Opção 1
 def cadastrar_cliente():
     print("\n👤 CADASTRO DE CLIENTE")
-    novo_cliente = None
-    choice = input("Possui cadastro? S ou N: ")
 
-    if choice == "N" or choice == "n":
-        print(f"Sua opção: {choice}")
-        nome = input("Nome do cliente: ")
-        telefone = input("Telefone: ")
-        email = input("E-mail: ")
-        cpf = validar_cpf(input("CPF: "))
+    nome = input("Nome do cliente: ")
+    telefone = input("Telefone: ")
+    email = input("E-mail: ")
+    cpf = input("E-mail: ") #validar_cpf(input("CPF: "))
+    novo_cliente = usuario(nome,telefone,email,cpf)
+    banco_de_dados.salvar_usuario_banco(banco.client, novo_cliente.to_dict())
 
-        novo_cliente = usuario(nome,telefone,email,cpf)
-        banco_de_dados.salvar_usuario_banco(banco.client, novo_cliente.to_dict())
-    elif choice == "S" or choice == "s":
-        novo_cliente = buscar_usuario(True)
-        if novo_cliente == None:
-            return
-    else:
-        print("Opção não encontrada")
-        return
+    #cadastrar_animal(novo_cliente)
 
-    print("registrar animal:")
-    cadastrar_animal(novo_cliente)
     #clientes.append(cliente)
     #print("✅ Cliente cadastrado com sucesso!\n")
 
-def cadastrar_animal(tutor):
+# Opção 10
+def cadastrar_animal():
     print("\n👤 CADASTRO DE ANIMAL")
+
+    tutor = buscar_usuario(True)
+    if tutor == None:
+        return
 
     nome = input("Nome do animal: ")
     tipo = input("tipo de animal: ")
     idade = input("idade: ")
     raca = input("raça: ")
-    tutor_cpf = tutor.cpf
-
+    tutor_cpf = tutor["cpf"]
     novo_animal = animal(nome,tipo,raca,idade,tutor_cpf)
-
-    banco_de_dados.salvar_animal_banco(banco.client,novo_animal)
+    banco_de_dados.salvar_animal_banco(banco.client,novo_animal.to_dict())
 
     # clientes.append(novo_animal)
     # print("✅ Cliente cadastrado com sucesso!\n")
@@ -159,25 +150,6 @@ def agendar_clinico():
     print("✅ Consulta clínica agendada com sucesso!\n")
     #   -----
 
-def consultar_horarios():
-    print("\n⏰ HORÁRIOS JÁ AGENDADOS\n")
-
-    todos_agendamentos = agendamentos_banho_tosa + agendamentos_clinicos
-
-    if not todos_agendamentos:
-        print("Nenhum horário agendado. Todos estão disponíveis!\n")
-        return
-
-    for ag in sorted(todos_agendamentos, key=lambda x: x["data_hora"]):
-        print(
-            f"{ag['data_hora'].strftime('%d/%m/%Y %H:%M')} | "
-            f"Tipo: {ag['tipo']} | "
-            f"Cliente: {ag['cliente']['nome']} | "
-            f"Pet: {ag['pet']}"
-        )
-    print()
-
-
 # ================= RELATÓRIOS =================
 
 # Opção 4
@@ -198,6 +170,29 @@ def relatorio_consultas():
         )
     print()
     #   -----
+
+# Opção 5
+def consultar_horarios():
+    print("\n⏰ HORÁRIOS JÁ AGENDADOS\n")
+
+    todos_agendamentos = agendamentos_banho_tosa + agendamentos_clinicos
+
+    if not todos_agendamentos:
+        print("Nenhum horário agendado. Todos estão disponíveis!\n")
+        return
+
+    for ag in sorted(todos_agendamentos, key=lambda x: x["data_hora"]):
+        print(
+            f"{ag['data_hora'].strftime('%d/%m/%Y %H:%M')} | "
+            f"Tipo: {ag['tipo']} | "
+            f"Cliente: {ag['cliente']['nome']} | "
+            f"Pet: {ag['pet']}"
+        )
+    print()
+
+# Opção 6
+def listar_clientes():
+    pass
 
 # Opção 7
 def buscar_usuario(retorna_dados = False):
@@ -224,6 +219,7 @@ def menu():
     while True:
         print("🐾 SISTEMA PETSHOP 🐾")
         print("1 - Cadastro de Cliente")
+        print("10 - Cadastro de Cliente")
         print("2 - Agendamento Banho e Tosa")
         print("3 - Agendamento Clínico")
         print("4 - Relatório de Consultas Clínicas")
@@ -236,6 +232,8 @@ def menu():
 
         if opcao == "1":
             cadastrar_cliente()
+        elif opcao == "10":
+            cadastrar_animal()
         elif opcao == "2":
             agendar_banho_tosa()
         elif opcao == "3":

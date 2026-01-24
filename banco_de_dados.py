@@ -41,9 +41,8 @@ class db:
         except Exception as e:
             print(e)
 
-#    ---------------------------
-#   Funções de Registrar
 
+# ================= SALVAR NO BANCO =================
 
 def salvar_usuario_banco(cliente, dicionario):
     """
@@ -63,14 +62,14 @@ def salvar_usuario_banco(cliente, dicionario):
     try:
         x = mycol.insert_one(dicionario)
         #print(x)
-        print(x.inserted_id)
+        print(dicionario)
         print("Dados Cadastrados com Sucesso")
-    except DuplicateKeyError:
+    except DuplicateKeyError as e:
+        print(e)
         print("ERRO: CPF ja cadastrado")
     except Exception as e:
         print("ERRO: dados não foram cadastrados")
         print (e)
-
 
 def salvar_animal_banco(cliente, dicionario):
     """
@@ -96,7 +95,6 @@ def salvar_animal_banco(cliente, dicionario):
     except Exception as e:
         print("ERRO: dados não foram cadastrados")
         print (e)
-
 
 def salvar_consulta(cliente, dicionario, dono, animal):
     """
@@ -126,9 +124,7 @@ def salvar_consulta(cliente, dicionario, dono, animal):
     pass
 
 
-#    ---------------------------
-#   Funções de Pesquisar
-
+# ================= PESQUISAR NO BANCO =================
 
 def pesquisar_usuario(cliente, informacao, return_info = False):
     """
@@ -149,7 +145,6 @@ def pesquisar_usuario(cliente, informacao, return_info = False):
             return x
     print("Usuario Não Encontrado")
 
-
 def pesquisar_pet(cliente, dono, informacao):
     """
         Busca dados de um animal. Pode retornar uma lista de dados, em JSON/Dicionário.
@@ -165,7 +160,6 @@ def pesquisar_pet(cliente, dono, informacao):
     for x in mycol.find({"cpf": informacao}):
         print (x["nome"])
         return x
-
 
 def pesquisar_consulta(cliente, informacao, return_info = False):
     """
@@ -186,39 +180,33 @@ def pesquisar_consulta(cliente, informacao, return_info = False):
             return x
     print("Usuario Não Encontrado")
 
-#    ---------------------------
-#   Funções de Referencia
 
-# faz pesquisa no banco de dados
-def pesquisar_dados_banco(cliente, tabela, informacao,  chave = None):
-    #(pode haver falhas se houver informações semelhantes). Retorna JSON/Dicionário
+# ================= CODIGO LEGADO =================
 
-    mydb = cliente["banco"]
-    mycol = mydb[tabela]
+# def pesquisar_dados_banco(cliente, tabela, informacao,  chave = None):
+#     #(pode haver falhas se houver informações semelhantes). Retorna JSON/Dicionário
+#
+#     mydb = cliente["banco"]
+#     mycol = mydb[tabela]
+#
+#     for x in mycol.find({chave: informacao}):
+#         print (x)
+#
+# # salva informação no bando de dados. Precisa inserir QUAL lugar do banco (tabela) deseja colocar
+# def salvar_dados_banco(cliente, tabela, dicionario):
+#     mydb = cliente["banco"]
+#     mycol = mydb[tabela]
+#
+#     try:
+#         x = mycol.insert_one(dicionario)
+#         print(x)
+#         print(x.inserted_id)
+#         print("Dados Cadastrados com Sucesso")
+#
+#     except Exception as e:
+#         print("ERRO: dados não foram cadastrados")
+#         print (e)
 
-    for x in mycol.find({chave: informacao}):
-        print (x)
-
-# salva informação no bando de dados. Precisa inserir QUAL lugar do banco (tabela) deseja colocar
-def salvar_dados_banco(cliente, tabela, dicionario):
-    mydb = cliente["banco"]
-    mycol = mydb[tabela]
-
-    try:
-        x = mycol.insert_one(dicionario)
-        print(x)
-        print(x.inserted_id)
-        print("Dados Cadastrados com Sucesso")
-
-    except Exception as e:
-        print("ERRO: dados não foram cadastrados")
-        print (e)
-
-
-#    ---------------------------
-# CODIGO LEGADO - não utilizar
-
-# #faz o login no bando de dados
 # def database_login(database_username, database_password):
 #     print("Logando no Banco: ", end="")
 #     try:
