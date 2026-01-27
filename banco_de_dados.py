@@ -221,19 +221,12 @@ def excluir_funcionario(link, cpf):
 
 # ================= BANHO E TOSA / CLINICO =================
 
-def salvar_agendamento_banho_tosa(link, agendamento, tutor, animal):
+def salvar_agendamento_banho_tosa(link, agendamento):
     """
     Salva um agendamento de banho e tosa no banco.
     """
     db = link["banco"]
     colecao = db["agendamento_banho_tosa"]
-
-    # Atualiza com dados do tutor e do pet
-    agendamento.update({
-        "tutor_cpf": tutor["cpf"],
-        "cliente_nome": tutor["nome"],
-        "animal_nome": animal["nome"]
-    })
 
     try:
         colecao.insert_one(agendamento)
@@ -241,19 +234,12 @@ def salvar_agendamento_banho_tosa(link, agendamento, tutor, animal):
     except Exception as e:
         print("❌ Erro ao salvar o agendamento: ", e)
 
-def salvar_agendamento_clinico(link, agendamento, tutor, animal):
+def salvar_agendamento_clinico(link, agendamento):
     """
     Salva um agendamento de banho e tosa no banco.
     """
     db = link["banco"]
     colecao = db["agendamento_clinico"]
-
-    # Atualiza com dados do tutor e do pet
-    agendamento.update({
-        "tutor_cpf": tutor["cpf"],
-        "cliente_nome": tutor["nome"],
-        "animal_nome": animal["nome"]
-    })
 
     try:
         colecao.insert_one(agendamento)

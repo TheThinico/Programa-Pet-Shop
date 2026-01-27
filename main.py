@@ -100,15 +100,14 @@ def agendar_banho_e_tosa():
         return
 
     agendamento = {
-        "tipo": "Banho e Tosa",
         "porte": porte,
         "data_hora": data_hora,
-        "tutor_cpf": cliente["cpf"],
-        "cliente_nome": cliente["nome"],
-        "animal_nome": animal["nome"]
+        "tutor_cpf": tutor["cpf"],
+        "cliente_nome": tutor["nome"],
+        "animal_nome": tutor_animal["nome"]
     }
 
-    colecao = banco.client["banco"]["agendamento_banho_tosa"]
+    colecao = Banco.link["banco"]["agendamento_banho_tosa"]
     try:
         colecao.insert_one(agendamento)
         print("✅ Agendamento de banho e tosa cadastrado com sucesso!")
@@ -118,29 +117,37 @@ def agendar_banho_e_tosa():
 def agendar_clinico_pet():
     print("\n🩺 AGENDAMENTO CLÍNICO DO PET")
 
-    cpf = input("CPF do cliente: ")
-    cliente = banco_de_dados.buscar_clientes_banco(banco.client, cpf)
-
-    if not cliente:
-        print("❌ Cliente não cadastrado! Cadastre primeiro.\n")
+    cpf_tutor = input("CPF do tutor: ")
+    tutor = banco_de_dados.buscar_tutor_por_cpf(Banco.link, cpf_tutor)
+    if not tutor:
+        print("❌ Cliente não encontrado!")
         return
 
     nome_pet = input("Nome do pet: ")
-    motivo = input("Motivo da consulta: ")
+    tutor_animal = banco_de_dados.buscar_animal_por_nome(Banco.link, nome_pet, tutor["cpf"])
+    if not tutor_animal:
+        print("❌ Pet não encontrado para este cliente! Cadastre o pet primeiro.")
+        return
+
+    porte = input("Porte do pet (Pequeno/Médio/Grande): ")
     data = input("Data (dd/mm/aaaa): ")
     hora = input("Hora (hh:mm): ")
 
-    data_hora = datetime.strptime(f"{data} {hora}", "%d/%m/%Y %H:%M")
+    try:
+        data_hora = datetime.strptime(f"{data} {hora}", "%d/%m/%Y %H:%M")
+    except ValueError:
+        print("❌ Formato de data/hora inválido!")
+        return
 
-    consulta = {
-        "cpf": cpf,
-        "cliente_nome": cliente["nome"],
-        "pet": nome_pet,
-        "motivo": motivo,
-        "data_hora": data_hora
+    agendamento = {
+        "data_hora": data_hora,
+        "tutor_cpf": tutor["cpf"],
+        "cliente_nome": tutor["nome"],
+        "animal_nome": tutor_animal["nome"],
+        "porte": porte
     }
 
-    banco_de_dados.salvar_agendamento_pet(banco.client, consulta, cliente, {"nome": nome_pet})
+    banco_de_dados.salvar_agendamento_clinico(Banco.link, agendamento, {"nome": nome_pet})
     print("✅ Consulta clínica agendada com sucesso!\n")
 
 # ================= RELATÓRIOS =================
@@ -184,7 +191,7 @@ def consultar_horarios():
 def listar_clientes():
     print("\n📋 CLIENTES CADASTRADOS\n")
 
-    clientes = banco_de_dados.listar_clientes_banco(banco.client)
+    clientes = banco_de_dados.listar_clientes(Banco.link)
 
     if not clientes:
         print("Nenhum cliente cadastrado.\n")
@@ -197,9 +204,9 @@ def listar_clientes():
 
 def buscar_cliente():
     print("\n🔍 BUSCAR CLIENTE")
-    cpf = input("CPF do cliente: ")
+    cpf = input("CPF: ")
 
-    clientes = banco_de_dados.buscar_clientes_banco(banco.client, cpf)
+    clientes = banco_de_dados.buscar_clientes_banco(Banco.link, cpf)
 
     if not clientes:
         print("❌ Cliente não encontrado.\n")
@@ -213,7 +220,7 @@ def atualizar_cliente():
     print("\n✏️ ATUALIZAR CLIENTE")
     cpf = input("CPF do cliente: ")
 
-    clientes = banco_de_dados.buscar_clientes_banco(banco.client, cpf)
+    tutor = banco_de_dados.buscar_cliente(Banco.link, cpf)
 
     if not clientes:
         print("❌ Cliente não encontrado.\n")
@@ -222,29 +229,29 @@ def atualizar_cliente():
     print("Pressione ENTER para manter o valor atual\n")
 
     novos_dados = {
-        "cpf": input(f"CPF ({cliente['cpf']}): ") or cliente["cpf"],
-        "nome": input(f"Nome ({cliente['nome']}): ") or cliente["nome"],
-        "idade": input(f"Idade ({cliente['idade']}): ") or cliente["idade"],
-        "sexo": input(f"Sexo ({cliente['sexo']}): ") or cliente["sexo"],
-        "endereco": input(f"Endereço ({cliente['endereco']}): ") or cliente["endereco"],
-        "telefone": input(f"Telefone ({cliente['telefone']}): ") or cliente["telefone"],
-        "email": input(f"E-mail ({cliente['email']}): ") or cliente["email"],
+        "cpf": input(f"CPF ({tutor['cpf']}): ") or tutor["cpf"],
+        "nome": input(f"Nome ({tutor['nome']}): ") or tutor["nome"],
+        "idade": input(f"Idade ({tutor['idade']}): ") or tutor["idade"],
+        "sexo": input(f"Sexo ({tutor['sexo']}): ") or tutor["sexo"],
+        "endereco": input(f"Endereço ({tutor['endereco']}): ") or tutor["endereco"],
+        "telefone": input(f"Telefone ({tutor['telefone']}): ") or tutor["telefone"],
+        "email": input(f"E-mail ({tutor['email']}): ") or tutor["email"],
     }
 
 def excluir_cliente():
     print("\n🗑 EXCLUIR CLIENTE")
     cpf = input("CPF do funcionário: ")
 
-    clientes = banco_de_dados.buscar_clientes_banco(banco.client, cpf)
+    tutor = banco_de_dados.buscar_clientes_banco(Banco.link, cpf)
 
     if not clientes:
         print("❌ Cliente não encontrado.\n")
         return
 
-    confirm = input(f"Tem certeza que deseja excluir {cliente['nome']}? (S/N): ")
+    confirm = input(f"Tem certeza que deseja excluir {tutor['nome']}? (S/N): ")
 
     if confirm.lower() == "s":
-        banco_de_dados.excluir_clientes_banco(banco.client, cpf)
+        banco_de_dados.excluir_clientes_banco(Banco.link, cpf)
         print("✅ Cliente excluído com sucesso!\n")
     else:
         print("❌ Operação cancelada.\n")
@@ -277,14 +284,14 @@ def cadastrar_funcionario():
 
     }
 
-    banco_de_dados.salvar_funcionario_banco(banco.client, funcionario)
+    banco_de_dados.salvar_funcionario_banco(Banco.link, funcionario)
     print("✅ Funcionário cadastrado com sucesso no MongoDB!\n")
 
 #🔍 READ – Buscar funcionário
 def listar_funcionarios():
     print("\n📋 FUNCIONÁRIOS CADASTRADOS\n")
 
-    funcionarios = banco_de_dados.listar_funcionarios_banco(banco.client)
+    funcionarios = banco_de_dados.listar_funcionarios_banco(Banco.link)
 
     if not funcionarios:
         print("Nenhum funcionário cadastrado.\n")
@@ -299,7 +306,7 @@ def buscar_funcionario():
     print("\n🔍 BUSCAR FUNCIONÁRIO")
     cpf = input("CPF do funcionário: ")
 
-    funcionario = banco_de_dados.buscar_funcionario_banco(banco.client, cpf)
+    funcionario = banco_de_dados.buscar_funcionario_banco(Banco.link, cpf)
 
     if not funcionario:
         print("❌ Funcionário não encontrado.\n")
@@ -313,7 +320,7 @@ def atualizar_funcionario():
     print("\n✏️ ATUALIZAR FUNCIONÁRIO")
     cpf = input("CPF do funcionário: ")
 
-    funcionario = banco_de_dados.buscar_funcionario_banco(banco.client, cpf)
+    funcionario = banco_de_dados.buscar_funcionario_banco(Banco.link, cpf)
 
     if not funcionario:
         print("❌ Funcionário não encontrado.\n")
@@ -331,14 +338,14 @@ def atualizar_funcionario():
         "funcao": input(f"Função ({funcionario['funcao']}): ") or funcionario["funcao"],
     }
 
-    banco_de_dados.atualizar_funcionario_banco(banco.client, cpf, novos_dados)
+    banco_de_dados.atualizar_funcionario_banco(Banco.link, cpf, novos_dados)
     print("✅ Funcionário atualizado com sucesso!\n")
 
 def excluir_funcionario():
     print("\n🗑 EXCLUIR FUNCIONÁRIO")
     cpf = input("CPF do funcionário: ")
 
-    funcionario = banco_de_dados.buscar_funcionario_banco(banco.client, cpf)
+    funcionario = banco_de_dados.buscar_funcionario_banco(Banco.link, cpf)
 
     if not funcionario:
         print("❌ Funcionário não encontrado.\n")
@@ -347,13 +354,13 @@ def excluir_funcionario():
     confirm = input(f"Tem certeza que deseja excluir {funcionario['nome']}? (S/N): ")
 
     if confirm.lower() == "s":
-        banco_de_dados.excluir_funcionario_banco(banco.client, cpf)
+        banco_de_dados.excluir_funcionario_banco(Banco.link, cpf)
         print("✅ Funcionário excluído com sucesso!\n")
     else:
         print("❌ Operação cancelada.\n")
 
 def buscar_usuario(retorna = False):
-    x = banco_de_dados.pesquisar_usuario(banco.client, input("informe o cpf: "), True)
+    x = banco_de_dados.buscar_tutor_por_cpf(Banco.link, input("informe o cpf: "), True)
 
     if retorna:
         return x
@@ -363,11 +370,6 @@ def buscar_usuario(retorna = False):
 
     #print(banco_de_dados.pesquisar_usuario(link, input("cpf: ")) )
 
-def buscar_cliente(nome):
-    for cliente in clientes:
-        if cliente["nome"].lower() == nome.lower():
-            return cliente
-    return None
 
 # ================= MENU =================
 
