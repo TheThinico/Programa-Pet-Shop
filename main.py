@@ -20,20 +20,17 @@ def cadastrar_usuario():
     email = input("E-mail: ")
     cpf = input("CPF: ") #validar_cpf(input("CPF: "))
 
-    novo_cliente = modelos.Tutor(nome,telefone,email,cpf)
-    banco_de_dados.salvar_tutor(Banco.link, novo_cliente.to_dict())
+    endereco = buscar_endereco()
 
-    #cadastrar_animal(novo_cliente)
-
-    #clientes.append(cliente)
-    #print("✅ Cliente cadastrado com sucesso!\n")
+    novo_cliente = modelos.Tutor(nome,telefone,email,cpf,endereco)
+    banco_de_dados.salvar_tutor(Banco.database, novo_cliente.to_dict())
 
 def cadastrar_pet():
     print("\n🐶 CADASTRO DE PET\n")
 
     # Primeiro, pede o CPF do tutor
     cpf_tutor = input("CPF do tutor: ")
-    tutor = banco_de_dados.buscar_tutor_por_cpf(Banco.link, cpf_tutor)
+    tutor = banco_de_dados.buscar_tutor_por_cpf(Banco.database, cpf_tutor)
 
     if not tutor:
         print("❌ Tutor não cadastrado! Cadastre o cliente primeiro.\n")
@@ -43,7 +40,7 @@ def cadastrar_pet():
     nome_pet = input("Nome do pet: ")
 
     # Verifica se o pet já existe para o tutor
-    pet_existente = banco_de_dados.buscar_animal_por_nome(Banco.link, nome_pet, cpf_tutor)
+    pet_existente = banco_de_dados.buscar_animal_por_nome(Banco.database, nome_pet, cpf_tutor)
     if pet_existente:
         print(f"❌ Pet com o nome '{nome_pet}' já cadastrado para este tutor.\n")
         return
@@ -53,41 +50,26 @@ def cadastrar_pet():
     idade = input("Idade: ")
 
     novo_pet = modelos.Animal(nome_pet, tipo, raca, idade, cpf_tutor)
-    banco_de_dados.salvar_animal(Banco.link, novo_pet.to_dict())
-
-def buscar_endereco():
-    cep = str(input("Digite o CEP: "))
-    cep = cep.replace('-', '').replace(' ', '').replace('.', '').replace(',', '')
-    if len(cep) == 8:
-        link = f"https://viacep.com.br/ws/{cep}/json/"
-        requisicao = requests.get(link)
-
-        dic_requisicao = requisicao.json()
-        uf = dic_requisicao["uf"]
-        cidade = dic_requisicao['localidade']
-        bairro = dic_requisicao['bairro']
-        logradouro = dic_requisicao['logradouro']
-
-        print(f'Voce mora no {uf}, na cidade {cidade}, o bairro {bairro} e o logradouro {logradouro}')
-    else:
-        print('CEP INVÁLIDO')
+    banco_de_dados.salvar_animal(Banco.database, novo_pet.to_dict())
 
 # ================= AGENDAMENTOS =================
 
-def agendar_banho_e_tosa():
-    print("\n🛁 AGENDAMENTO BANHO E TOSA")
+def agendar_servico():
+    print("\n AGENDAMENTO ")
 
     cpf_tutor = input("CPF do tutor: ")
-    tutor = banco_de_dados.buscar_tutor_por_cpf(Banco.link, cpf_tutor)
+    tutor = banco_de_dados.buscar_tutor_por_cpf(Banco.database, cpf_tutor)
     if not tutor:
         print("❌ Cliente não encontrado!")
         return
 
     nome_pet = input("Nome do pet: ")
-    tutor_animal = banco_de_dados.buscar_animal_por_nome(Banco.link, nome_pet, tutor["cpf"])
+    tutor_animal = banco_de_dados.buscar_animal_por_nome(Banco.database, nome_pet, tutor["cpf"])
     if not tutor_animal:
         print("❌ Pet não encontrado para este cliente! Cadastre o pet primeiro.")
         return
+
+    tipo_servico = input("1 - Banho e Tosa \n2- Clinico\n")
 
     porte = input("Porte do pet (Pequeno/Médio/Grande): ")
     data = input("Data (dd/mm/aaaa): ")
@@ -100,46 +82,7 @@ def agendar_banho_e_tosa():
         return
 
     agendamento = {
-        "porte": porte,
-        "data_hora": data_hora,
-        "tutor_cpf": tutor["cpf"],
-        "cliente_nome": tutor["nome"],
-        "animal_nome": tutor_animal["nome"]
-    }
-
-    colecao = Banco.link["banco"]["agendamento_banho_tosa"]
-    try:
-        colecao.insert_one(agendamento)
-        print("✅ Agendamento de banho e tosa cadastrado com sucesso!")
-    except Exception as e:
-        print("❌ Erro ao salvar o agendamento:", e)
-
-def agendar_clinico_pet():
-    print("\n🩺 AGENDAMENTO CLÍNICO DO PET")
-
-    cpf_tutor = input("CPF do tutor: ")
-    tutor = banco_de_dados.buscar_tutor_por_cpf(Banco.link, cpf_tutor)
-    if not tutor:
-        print("❌ Cliente não encontrado!")
-        return
-
-    nome_pet = input("Nome do pet: ")
-    tutor_animal = banco_de_dados.buscar_animal_por_nome(Banco.link, nome_pet, tutor["cpf"])
-    if not tutor_animal:
-        print("❌ Pet não encontrado para este cliente! Cadastre o pet primeiro.")
-        return
-
-    porte = input("Porte do pet (Pequeno/Médio/Grande): ")
-    data = input("Data (dd/mm/aaaa): ")
-    hora = input("Hora (hh:mm): ")
-
-    try:
-        data_hora = datetime.strptime(f"{data} {hora}", "%d/%m/%Y %H:%M")
-    except ValueError:
-        print("❌ Formato de data/hora inválido!")
-        return
-
-    agendamento = {
+        "tipo": tipo_servico,
         "data_hora": data_hora,
         "tutor_cpf": tutor["cpf"],
         "cliente_nome": tutor["nome"],
@@ -147,8 +90,12 @@ def agendar_clinico_pet():
         "porte": porte
     }
 
-    banco_de_dados.salvar_agendamento_clinico(Banco.link, agendamento, {"nome": nome_pet})
-    print("✅ Consulta clínica agendada com sucesso!\n")
+    banco_de_dados.salvar_agendamento_servico(Banco.database, agendamento)
+
+    if tipo_servico == 1:
+        print("✅ Banho e Tosa agendado com sucesso!\n")
+    elif tipo_servico == 2:
+        print("✅ Consulta clínica agendada com sucesso!\n")
 
 # ================= RELATÓRIOS =================
 
@@ -188,25 +135,11 @@ def consultar_horarios():
         )
     print()
 
-def listar_clientes():
-    print("\n📋 CLIENTES CADASTRADOS\n")
-
-    clientes = banco_de_dados.listar_clientes(Banco.link)
-
-    if not clientes:
-        print("Nenhum cliente cadastrado.\n")
-        return
-
-    for i, f in enumerate(clientes, start=1):
-        print(f"\n{i}️⃣ CLIENTE")
-        for k, v in f.items():
-            print(f"{k}: {v}")
-
 def buscar_cliente():
     print("\n🔍 BUSCAR CLIENTE")
     cpf = input("CPF: ")
 
-    clientes = banco_de_dados.buscar_clientes_banco(Banco.link, cpf)
+    clientes = banco_de_dados.buscar_clientes_banco(Banco.database, cpf)
 
     if not clientes:
         print("❌ Cliente não encontrado.\n")
@@ -215,46 +148,6 @@ def buscar_cliente():
     print("\n👤 DADOS DO CLIENTE")
     for k, v in clientes.items():
         print(f"{k}: {v}")
-
-def atualizar_cliente():
-    print("\n✏️ ATUALIZAR CLIENTE")
-    cpf = input("CPF do cliente: ")
-
-    tutor = banco_de_dados.buscar_cliente(Banco.link, cpf)
-
-    if not clientes:
-        print("❌ Cliente não encontrado.\n")
-        return
-
-    print("Pressione ENTER para manter o valor atual\n")
-
-    novos_dados = {
-        "cpf": input(f"CPF ({tutor['cpf']}): ") or tutor["cpf"],
-        "nome": input(f"Nome ({tutor['nome']}): ") or tutor["nome"],
-        "idade": input(f"Idade ({tutor['idade']}): ") or tutor["idade"],
-        "sexo": input(f"Sexo ({tutor['sexo']}): ") or tutor["sexo"],
-        "endereco": input(f"Endereço ({tutor['endereco']}): ") or tutor["endereco"],
-        "telefone": input(f"Telefone ({tutor['telefone']}): ") or tutor["telefone"],
-        "email": input(f"E-mail ({tutor['email']}): ") or tutor["email"],
-    }
-
-def excluir_cliente():
-    print("\n🗑 EXCLUIR CLIENTE")
-    cpf = input("CPF do funcionário: ")
-
-    tutor = banco_de_dados.buscar_clientes_banco(Banco.link, cpf)
-
-    if not clientes:
-        print("❌ Cliente não encontrado.\n")
-        return
-
-    confirm = input(f"Tem certeza que deseja excluir {tutor['nome']}? (S/N): ")
-
-    if confirm.lower() == "s":
-        banco_de_dados.excluir_clientes_banco(Banco.link, cpf)
-        print("✅ Cliente excluído com sucesso!\n")
-    else:
-        print("❌ Operação cancelada.\n")
 
 # ====================== FUNCIONÁRIOS =======================
 
@@ -284,14 +177,14 @@ def cadastrar_funcionario():
 
     }
 
-    banco_de_dados.salvar_funcionario_banco(Banco.link, funcionario)
+    banco_de_dados.salvar_funcionario_banco(Banco.database, funcionario)
     print("✅ Funcionário cadastrado com sucesso no MongoDB!\n")
 
 #🔍 READ – Buscar funcionário
 def listar_funcionarios():
     print("\n📋 FUNCIONÁRIOS CADASTRADOS\n")
 
-    funcionarios = banco_de_dados.listar_funcionarios_banco(Banco.link)
+    funcionarios = banco_de_dados.listar_funcionarios_banco(Banco.database)
 
     if not funcionarios:
         print("Nenhum funcionário cadastrado.\n")
@@ -306,7 +199,7 @@ def buscar_funcionario():
     print("\n🔍 BUSCAR FUNCIONÁRIO")
     cpf = input("CPF do funcionário: ")
 
-    funcionario = banco_de_dados.buscar_funcionario_banco(Banco.link, cpf)
+    funcionario = banco_de_dados.buscar_funcionario_banco(Banco.database, cpf)
 
     if not funcionario:
         print("❌ Funcionário não encontrado.\n")
@@ -316,36 +209,11 @@ def buscar_funcionario():
     for k, v in funcionario.items():
         print(f"{k}: {v}")
 
-def atualizar_funcionario():
-    print("\n✏️ ATUALIZAR FUNCIONÁRIO")
-    cpf = input("CPF do funcionário: ")
-
-    funcionario = banco_de_dados.buscar_funcionario_banco(Banco.link, cpf)
-
-    if not funcionario:
-        print("❌ Funcionário não encontrado.\n")
-        return
-
-    print("Pressione ENTER para manter o valor atual\n")
-
-    novos_dados = {
-        "nome": input(f"Nome ({funcionario['nome']}): ") or funcionario["nome"],
-        "idade": input(f"Idade ({funcionario['idade']}): ") or funcionario["idade"],
-        "sexo": input(f"Sexo ({funcionario['sexo']}): ") or funcionario["sexo"],
-        "endereco": input(f"Endereço ({funcionario['endereco']}): ") or funcionario["endereco"],
-        "telefone": input(f"Telefone ({funcionario['telefone']}): ") or funcionario["telefone"],
-        "email": input(f"E-mail ({funcionario['email']}): ") or funcionario["email"],
-        "funcao": input(f"Função ({funcionario['funcao']}): ") or funcionario["funcao"],
-    }
-
-    banco_de_dados.atualizar_funcionario_banco(Banco.link, cpf, novos_dados)
-    print("✅ Funcionário atualizado com sucesso!\n")
-
 def excluir_funcionario():
     print("\n🗑 EXCLUIR FUNCIONÁRIO")
     cpf = input("CPF do funcionário: ")
 
-    funcionario = banco_de_dados.buscar_funcionario_banco(Banco.link, cpf)
+    funcionario = banco_de_dados.buscar_funcionario_banco(Banco.database, cpf)
 
     if not funcionario:
         print("❌ Funcionário não encontrado.\n")
@@ -354,22 +222,38 @@ def excluir_funcionario():
     confirm = input(f"Tem certeza que deseja excluir {funcionario['nome']}? (S/N): ")
 
     if confirm.lower() == "s":
-        banco_de_dados.excluir_funcionario_banco(Banco.link, cpf)
+        banco_de_dados.excluir_funcionario_banco(Banco.database, cpf)
         print("✅ Funcionário excluído com sucesso!\n")
     else:
         print("❌ Operação cancelada.\n")
 
-def buscar_usuario(retorna = False):
-    x = banco_de_dados.buscar_tutor_por_cpf(Banco.link, input("informe o cpf: "), True)
+# ================= FUNÇÕES AUXILIARES =================
 
-    if retorna:
-        return x
+def buscar_endereco():
+    cep = str(input("Digite o CEP: "))
+    cep = cep.replace('-', '').replace(' ', '').replace('.', '').replace(',', '')
+    if len(cep) == 8:
+        link = f"https://viacep.com.br/ws/{cep}/json/"
+        requisicao = requests.get(link)
+
+        dic_requisicao = requisicao.json()
+        print(f"{dic_requisicao["logradouro"]}, Bairro {dic_requisicao['bairro']}, dic_requisicao['localidade']")
+        numero = input("Numero: ")
+        complemento = input("Complemento (se não possuir: N): ")
+
+        endereco = {
+            "cep": cep,
+            "rua": dic_requisicao['logradouro'],
+            "numero": numero,
+            "complemento": complemento,
+            "bairro": dic_requisicao['bairro'],
+            "cidade": dic_requisicao['localidade'],
+            "uf": dic_requisicao["uf"],
+        }
+
+        return endereco
     else:
-        for chave, valor in x:
-            print(f"{chave} : {valor}")
-
-    #print(banco_de_dados.pesquisar_usuario(link, input("cpf: ")) )
-
+        raise Exception("CEP INVÁLIDO")
 
 # ================= MENU =================
 
@@ -382,16 +266,19 @@ def menu():
         print("1 - Cadastro de Cliente")
         print("2 - Cadastro de Pets")
         print("3 - Agendamento Clínico do Pet")
-        print("4 - Agendamento Banho e Tosa")
+        print("4")
+        #print("4 - Agendamento Banho e Tosa")
         print("-----------------------------------")
         print("5 - Relatório de Consultas Clínicas")
         print("6 - Consultar Horários Disponíveis")
-        print("7 - Consultar Clientes Cadastrados")
+        print("7")
+        #print("7 - Consultar Clientes Cadastrados")
         print("8 - Consultar Funcionarios Cadastrados")
         print("--------------------------------------")
         print("9  - Cadastro de Funcionários")
         print("10 - Buscar Funcionário")
-        print("11 - Atualizar Funcionário")
+        print("11")
+        # print("11 - Atualizar Funcionário")
         print("12 - Excluir Funcionário")
         print("")
         print("0 - Sair <====")
@@ -403,23 +290,23 @@ def menu():
         elif opcao == "2":
             cadastrar_pet()
         elif opcao == "3":
-            agendar_clinico_pet()
-        elif opcao == "4":
-            agendar_banho_e_tosa()
+            agendar_servico()
+        # elif opcao == "4":
+        #     agendar_banho_e_tosa()
         elif opcao == "5":
             relatorio_consultas()
         elif opcao == "6":
             consultar_horarios()
-        elif opcao == "7":
-            listar_clientes()
+        # elif opcao == "7":
+        #     listar_clientes()
         elif opcao == "8":
             listar_funcionarios()
         elif opcao == "9":
             cadastrar_funcionario()
         elif opcao == "10":
             buscar_funcionario()
-        elif opcao == "11":
-            atualizar_funcionario()
+        # elif opcao == "11":
+        #     atualizar_funcionario()
         elif opcao == "12":
             excluir_funcionario()
         elif opcao == "0":
@@ -428,3 +315,165 @@ def menu():
         else:
             print("❌ Opção inválida!\n")
 menu()
+
+# def atualizar_funcionario():
+#     print("\n✏️ ATUALIZAR FUNCIONÁRIO")
+#     cpf = input("CPF do funcionário: ")
+#
+#     funcionario = banco_de_dados.buscar_funcionario_banco(Banco.database, cpf)
+#
+#     if not funcionario:
+#         print("❌ Funcionário não encontrado.\n")
+#         return
+#
+#     print("Pressione ENTER para manter o valor atual\n")
+#
+#     novos_dados = {
+#         "nome": input(f"Nome ({funcionario['nome']}): ") or funcionario["nome"],
+#         "idade": input(f"Idade ({funcionario['idade']}): ") or funcionario["idade"],
+#         "sexo": input(f"Sexo ({funcionario['sexo']}): ") or funcionario["sexo"],
+#         "endereco": input(f"Endereço ({funcionario['endereco']}): ") or funcionario["endereco"],
+#         "telefone": input(f"Telefone ({funcionario['telefone']}): ") or funcionario["telefone"],
+#         "email": input(f"E-mail ({funcionario['email']}): ") or funcionario["email"],
+#         "funcao": input(f"Função ({funcionario['funcao']}): ") or funcionario["funcao"],
+#     }
+#
+#     banco_de_dados.atualizar_funcionario_banco(Banco.database, cpf, novos_dados)
+#     print("✅ Funcionário atualizado com sucesso!\n")
+
+
+# def atualizar_cliente():
+#     print("\n✏️ ATUALIZAR CLIENTE")
+#     cpf = input("CPF do cliente: ")
+#
+#     tutor = banco_de_dados.buscar_cliente(Banco.link, cpf)
+#
+#     if not clientes:
+#         print("❌ Cliente não encontrado.\n")
+#         return
+#
+#     print("Pressione ENTER para manter o valor atual\n")
+#
+#     novos_dados = {
+#         "cpf": input(f"CPF ({tutor['cpf']}): ") or tutor["cpf"],
+#         "nome": input(f"Nome ({tutor['nome']}): ") or tutor["nome"],
+#         "idade": input(f"Idade ({tutor['idade']}): ") or tutor["idade"],
+#         "sexo": input(f"Sexo ({tutor['sexo']}): ") or tutor["sexo"],
+#         "endereco": input(f"Endereço ({tutor['endereco']}): ") or tutor["endereco"],
+#         "telefone": input(f"Telefone ({tutor['telefone']}): ") or tutor["telefone"],
+#         "email": input(f"E-mail ({tutor['email']}): ") or tutor["email"],
+#     }
+
+# def excluir_cliente():
+#     print("\n🗑 EXCLUIR CLIENTE")
+#     cpf = input("CPF do funcionário: ")
+#
+#     tutor = banco_de_dados.buscar_tutor_por_cpf(Banco.database, cpf)
+#
+#     if not clientes:
+#         print("❌ Cliente não encontrado.\n")
+#         return
+#
+#     confirm = input(f"Tem certeza que deseja excluir {tutor['nome']}? (S/N): ")
+#
+#     if confirm.lower() == "s":
+#         banco_de_dados.excluir_clientes_banco(Banco.database, cpf)
+#         print("✅ Cliente excluído com sucesso!\n")
+#     else:
+#         print("❌ Operação cancelada.\n")
+
+# def buscar_usuario(retorna = False):
+#     x = banco_de_dados.buscar_tutor_por_cpf(Banco.database, input("informe o cpf: "), True)
+#
+#     if retorna:
+#         return x
+#     else:
+#         for chave, valor in x:
+#             print(f"{chave} : {valor}")
+#     #print(banco_de_dados.pesquisar_usuario(link, input("cpf: ")) )
+
+# def agendar_banho_e_tosa():
+#     print("\n🛁 AGENDAMENTO BANHO E TOSA")
+#
+#     cpf_tutor = input("CPF do tutor: ")
+#     tutor = banco_de_dados.buscar_tutor_por_cpf(Banco.database, cpf_tutor)
+#     if not tutor:
+#         print("❌ Cliente não encontrado!")
+#         return
+#
+#     nome_pet = input("Nome do pet: ")
+#     tutor_animal = banco_de_dados.buscar_animal_por_nome(Banco.database, nome_pet, tutor["cpf"])
+#     if not tutor_animal:
+#         print("❌ Pet não encontrado para este cliente! Cadastre o pet primeiro.")
+#         return
+#
+#     porte = input("Porte do pet (Pequeno/Médio/Grande): ")
+#     data = input("Data (dd/mm/aaaa): ")
+#     hora = input("Hora (hh:mm): ")
+#
+#     try:
+#         data_hora = datetime.strptime(f"{data} {hora}", "%d/%m/%Y %H:%M")
+#     except ValueError:
+#         print("❌ Formato de data/hora inválido!")
+#         return
+#
+#     agendamento = {
+#         "data_hora": data_hora,
+#         "tutor_cpf": tutor["cpf"],
+#         "cliente_nome": tutor["nome"],
+#         "animal_nome": tutor_animal["nome"],
+#         "porte": porte
+#     }
+#
+#     banco_de_dados.salvar_agendamento_banho_tosa(Banco.database, agendamento)
+#     print("✅ Banho e Tosa agendado com sucesso!\n")
+#
+# def agendar_clinico_pet():
+#     print("\n🩺 AGENDAMENTO CLÍNICO DO PET")
+#
+#     cpf_tutor = input("CPF do tutor: ")
+#     tutor = banco_de_dados.buscar_tutor_por_cpf(Banco.database, cpf_tutor)
+#     if not tutor:
+#         print("❌ Cliente não encontrado!")
+#         return
+#
+#     nome_pet = input("Nome do pet: ")
+#     tutor_animal = banco_de_dados.buscar_animal_por_nome(Banco.database, nome_pet, tutor["cpf"])
+#     if not tutor_animal:
+#         print("❌ Pet não encontrado para este cliente! Cadastre o pet primeiro.")
+#         return
+#
+#     porte = input("Porte do pet (Pequeno/Médio/Grande): ")
+#     data = input("Data (dd/mm/aaaa): ")
+#     hora = input("Hora (hh:mm): ")
+#
+#     try:
+#         data_hora = datetime.strptime(f"{data} {hora}", "%d/%m/%Y %H:%M")
+#     except ValueError:
+#         print("❌ Formato de data/hora inválido!")
+#         return
+#
+#     agendamento = {
+#         "data_hora": data_hora,
+#         "tutor_cpf": tutor["cpf"],
+#         "cliente_nome": tutor["nome"],
+#         "animal_nome": tutor_animal["nome"],
+#         "porte": porte
+#     }
+#
+#     banco_de_dados.salvar_agendamento_clinico(Banco.database,agendamento)
+#     print("✅ Consulta clínica agendada com sucesso!\n")
+
+# def listar_clientes():
+#     print("\n📋 CLIENTES CADASTRADOS\n")
+#
+#     clientes = banco_de_dados.listar_clientes(Banco.database)
+#
+#     if not clientes:
+#         print("Nenhum cliente cadastrado.\n")
+#         return
+#
+#     for i, f in enumerate(clientes, start=1):
+#         print(f"\n{i}️⃣ CLIENTE")
+#         for k, v in f.items():
+#             print(f"{k}: {v}")

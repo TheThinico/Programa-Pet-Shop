@@ -1,16 +1,10 @@
-import banco_de_dados
-
 class Tutor:
-    nome = "nome"
-    telefone = "0"
-    email = "email"
-    cpf = "0"
-
-    def __init__(self,nome,telefone,email,cpf):
+    def __init__(self,nome,telefone,email,cpf,endereco):
         self.nome = nome
         self.telefone = telefone
         self.email = email
         self.cpf = cpf
+        self.endereco = endereco
 
     def to_dict(self):
         return {
@@ -18,7 +12,14 @@ class Tutor:
             "telefone": self.telefone,
             "email": self.email,
             "cpf": self.cpf,
+            "endereco": self.endereco
         }
+    def set_dict(self,dict):
+        self.nome = dict["nome"]
+        self.telefone = dict["telefone"]
+        self.email = dict["email"]
+        self.cpf = dict["cpf"]
+        self.endereco = dict["endereco"]
 
 class Animal:
     def __init__(self,nome,tipo,raca,idade,tutor_cpf):
@@ -36,3 +37,10 @@ class Animal:
             "idade": self.idade,
             "tutor_cpf": self.tutor_cpf,
         }
+
+    def set_dict(self,dict):
+        self.nome = dict["nome"]
+        self.tipo = dict["tipo"]
+        self.raca = dict["raca"]
+        self.idade = dict["idade"]
+        self.tutor_cpf = dict["tutor_cpf"]
