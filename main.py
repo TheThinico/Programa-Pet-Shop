@@ -1,12 +1,14 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date, time
+
+from urllib3.util.util import to_str
 
 import banco_de_dados
 import modelos
 import requests
 
-clientes = []
-agendamentos_banho_tosa = []
-agendamentos_clinicos = []
+# clientes = []
+# agendamentos_banho_tosa = []
+# agendamentos_clinicos = []
 
 Banco = banco_de_dados.Db_Client()
 
@@ -84,8 +86,31 @@ def agendar_servico():
     tipo_servico = escolher_tipo_servico()
 
     #porte = input("Porte do pet (Pequeno/Médio/Grande): ")
-    data = input("Data (dd/mm/aaaa): ").strip()
-    hora = input("Hora (hh:mm): ").strip()
+    dia = int(input("Dia "))
+    mes = int(input("Dia "))
+    data = datetime(dia,mes,2026).date()
+
+    horarios_lista = gerar_horarios_time()
+    horarios_ocupados = banco_de_dados.buascar_servicos(Banco.database)
+    lista = []
+    for i in horarios_ocupados:
+        lista.append(time.strptime(i["hora"], "%H:%M"))
+    horarios_ocupados = set(lista)
+
+    hora = False
+    while hora == False:
+        print("--- Horarios Disponíveis ---")
+        for i in range(len(horarios_lista)):
+            print(f"{i} - ", end="")
+            if horarios_lista[i] in horarios_ocupados:
+                print(riscar_texto(horarios_lista[i]))
+            else:
+                print(horarios_lista[i].strptime("%H:%M"))
+        escolha = int(input(": "))
+        if escolha > len(horarios_lista) or escolha < 1:
+            print("Escolha invalida, tente novamente")
+        else:
+            hora = horarios_lista[escolha]
 
     try:
         data_hora = datetime.strptime(
@@ -102,8 +127,8 @@ def agendar_servico():
         "animal_nome": tutor_animal.nome,
         #"porte": porte
         "tipo": tipo_servico,
-        "data": data,
-        "hora": hora,
+        "data": data.strptime(data,"%d/%m/%Y"),
+        "hora": hora.strptime("%H:%M"),
     }
 
     banco_de_dados.salvar_agendamento_servico(Banco.database, agendamento)
@@ -188,6 +213,7 @@ def pesquisar_cliente():
 
     animais = banco_de_dados.buscar_animais_tutor(Banco.database, cpf_tutor)
 
+    print(f"--- TUTOR ---")
     for i, j in tutor.to_dict().items():
         print(f"{i}: {j}")
     #tutor_dic = tutor.to_dict()
@@ -198,7 +224,7 @@ def pesquisar_cliente():
         print(f"\n--- Tutor não Possui animais Cadastrados ---")
     else:
         for i in range(len(animais)):
-            print(f"{i}) ")
+            print(f"--- ANIMAL {i + 1} ---  ")
             for j, k in animais[i].to_dict().items():
                 print(f"{j}: {k}")
 
@@ -263,8 +289,8 @@ def escolher_tipo_servico():
 def gerar_horarios_time(inicio="08:00", fim="18:00", intervalo=30):
     horarios = []
 
-    atual = datetime.strptime(inicio, "%H:%M")
-    fim = datetime.strptime(fim, "%H:%M")
+    atual = time.strptime(inicio, "%H:%M")
+    fim = time.strptime(fim, "%H:%M")
 
     while atual <= fim:
         #print(atual.time())
@@ -272,6 +298,9 @@ def gerar_horarios_time(inicio="08:00", fim="18:00", intervalo=30):
         atual += timedelta(minutes=intervalo)
 
     return horarios
+
+def riscar_texto(texto):
+    return ''.join(c + '\u0336' for c in texto)
 
 # ================= MENU =================
 def menu():
@@ -282,21 +311,14 @@ def menu():
         print("----------------------------------")
         print("1 - Cadastro de Cliente")
         print("2 - Cadastro de Pets")
-        print("3 - Agendamento Clínico do Pet")
+        print("3 - Agendamento de serviço ")
         print("4 - Pesquisar Cliente ")
-        print("-----------------------------------")
         print("5 - Relatório de Consultas Clínicas")
         print("6 - Consultar Horários Disponíveis")
-        print("7")
-        #print("7 - Consultar Clientes Cadastrados")
+        print("7 - Cadastro de Funcionários")
         print("8 - Consultar Funcionarios Cadastrados")
+        print("9 - Buscar Funcionário")
         print("--------------------------------------")
-        print("9  - Cadastro de Funcionários")
-        print("10 - Buscar Funcionário")
-        print("11")
-        # print("11 - Atualizar Funcionário")
-        # print("12 - Excluir Funcionário")
-        print("")
         print("0 - Sair <====")
         print("")
         opcao = input("Escolha uma opção: ")
@@ -309,22 +331,17 @@ def menu():
             agendar_servico()
         elif opcao == "4":
              pesquisar_cliente()
-        #elif opcao == "5":
+        elif opcao == "5":
+            pass
             #relatorio_servicos()
         elif opcao == "6":
             consultar_horarios()
-        # elif opcao == "7":
-        #     listar_clientes()
+        elif opcao == "7":
+            cadastrar_funcionario()
         elif opcao == "8":
             listar_funcionarios()
         elif opcao == "9":
-            cadastrar_funcionario()
-        elif opcao == "10":
             buscar_funcionario()
-        # elif opcao == "11":
-        #     atualizar_funcionario()
-        # elif opcao == "12":
-        #     excluir_funcionario()
         elif opcao == "0":
             print("👋 Saindo do sistema...")
             break

@@ -148,7 +148,8 @@ def buscar_animais_tutor(db, tutor_cpf):
 
     for x in colecao.find({"tutor_cpf": tutor_cpf}):
         animal = modelos.Animal()
-        lista.append(animal.set_dict(x))
+        animal.set_dict(x)
+        lista.append(animal)
     return lista
 
 # ================= FUNCIONARIOS =================
@@ -206,6 +207,14 @@ def salvar_agendamento_servico(db, agendamento):
         colecao.insert_one(agendamento)
     except Exception as e:
         raise ("❌ Erro ao salvar o agendamento: ", e)
+
+def buascar_servicos(db, dia = None):
+    colecao = db["agendamento_servico"]
+
+    if dia == None:
+        return list(colecao.find({}, {"_id": 0}))
+    else:
+        return list(colecao.find({"data": dia}, {"_id": 0}))
 
 #   ----- Buscar -----
 def pesquisar_consulta(db, informacao, return_info = False):
