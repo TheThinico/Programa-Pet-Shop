@@ -58,36 +58,53 @@ def agendar_servico():
     print("\n AGENDAMENTO ")
 
     cpf_tutor = input("CPF do tutor: ")
-    tutor = banco_de_dados.buscar_tutor_por_cpf(Banco.database, cpf_tutor)
+    tutor_buscar = banco_de_dados.buscar_tutor_por_cpf(Banco.database, cpf_tutor)
+
+    tutor = modelos.Tutor(tutor_buscar["nome"],tutor_buscar["telefone"],tutor_buscar["email"],tutor_buscar["cpf"],tutor_buscar["endereco"])
     if not tutor:
         print("❌ Cliente não encontrado!")
         return
 
-    nome_pet = input("Nome do pet: ")
-    tutor_animal = banco_de_dados.buscar_animal_por_nome(Banco.database, nome_pet, tutor["cpf"])
-    if not tutor_animal:
-        print("❌ Pet não encontrado para este cliente! Cadastre o pet primeiro.")
-        return
+    # nome_pet = input("Nome do pet: ")
+    # tutor_animal = banco_de_dados.buscar_animal_por_nome(Banco.database, nome_pet, tutor["cpf"])
+    # if not tutor_animal:
+    #     print("❌ Pet não encontrado para este cliente! Cadastre o pet primeiro.")
+    #     return
 
-    tipo_servico = input("1 - Banho e Tosa \n2- Clinico\n")
+    animal = escolher_animais_do_tutor(tutor)
+    tutor_animal = modelos.Animal(animal["nome"],animal["tipo"],animal["raca"],animal["idade"],tutor.cpf)
 
-    porte = input("Porte do pet (Pequeno/Médio/Grande): ")
-    data = input("Data (dd/mm/aaaa): ")
-    hora = input("Hora (hh:mm): ")
+    tipo_servico = 0
+
+    b = False
+    while not b:
+        tipo_servico = int(input("1 - Banho e Tosa \n2- Clinico\n"))
+        if tipo_servico == 1 or tipo_servico == 2:
+            b = True
+        else:
+            print("Opção inválida.")
+
+    #porte = input("Porte do pet (Pequeno/Médio/Grande): ")
+    data = input("Data (dd/mm/aaaa): ").strip()
+    hora = input("Hora (hh:mm): ").strip()
 
     try:
-        data_hora = datetime.strptime(f"{data} {hora}", "%d/%m/%Y %H:%M")
+        data_hora = datetime.strptime(
+            f"{data} {hora}",
+            "%d/%m/%Y %H:%M"
+        )
     except ValueError:
         print("❌ Formato de data/hora inválido!")
         return
 
     agendamento = {
+        "cliente_nome": tutor.nome,
+        "tutor_cpf": tutor.cpf,
+        "animal_nome": tutor_animal.nome,
+        #"porte": porte
         "tipo": tipo_servico,
-        "data_hora": data_hora,
-        "tutor_cpf": tutor["cpf"],
-        "cliente_nome": tutor["nome"],
-        "animal_nome": tutor_animal["nome"],
-        "porte": porte
+        "data": data,
+        "hora": hora,
     }
 
     banco_de_dados.salvar_agendamento_servico(Banco.database, agendamento)
@@ -96,6 +113,7 @@ def agendar_servico():
         print("✅ Banho e Tosa agendado com sucesso!\n")
     elif tipo_servico == 2:
         print("✅ Consulta clínica agendada com sucesso!\n")
+
 
 # ================= RELATÓRIOS =================
 
@@ -254,6 +272,25 @@ def buscar_endereco():
         return endereco
     else:
         raise Exception("CEP INVÁLIDO")
+
+def escolher_animais_do_tutor(tutor):
+    animais = banco_de_dados.buscar_animais_tutor(Banco.database, tutor.cpf)
+
+    if animais == None:
+        raise ValueError("Erro: não achamos animais cadastrados")
+    elif len(animais) == 1:
+        return animais[0]
+    else:
+        while True:
+            count = 0
+            for list in animais:
+                count += 1
+                print(f"{count}) {list["nome"]}")
+            escolha = int(input("Qual animal: "))
+            if escolha >= 1 and escolha <= count:
+                return animais[count - 1]
+            else:
+                print("Opção não existente")
 
 # ================= MENU =================
 

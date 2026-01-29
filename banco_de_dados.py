@@ -129,7 +129,7 @@ def buscar_animal_por_nome(db, nome_pet, tutor_cpf):
         print("❌ Erro ao buscar animal:", e)
         return None
 
-def buscar_animais_tutor(db, tutor):
+def buscar_animais_tutor(db, tutor_cpf):
     """
         Mostra uma Lista de animais de um tutor. Pode retornar uma lista de dados, em JSON/Dicionário.
 
@@ -141,12 +141,10 @@ def buscar_animais_tutor(db, tutor):
 
     lista = []
 
-    for x in colecao.find({"tutor_cpf": tutor["cpf"]}):
+    for x in colecao.find({"tutor_cpf": tutor_cpf}):
         #print (x["nome"])
         lista.append(x)
     return lista
-
-
 
 # ================= FUNCIONARIOS =================
 
@@ -185,47 +183,22 @@ def excluir_funcionario(db, cpf):
 
     return colecao.delete_one({"cpf": cpf})
 
-# ================= BANHO E TOSA / CLINICO =================
+# ================= SERVIÇO =================
 
 def salvar_agendamento_servico(db, agendamento):
     """
     Salva um agendamento de banho e tosa no banco.
     """
     #db = link["banco"]
-    colecao = db["agendamento_banho_tosa"]
+    colecao = db["agendamento_servico"]
 
     try:
         colecao.insert_one(agendamento)
-        print("✅ Agendamento de banho e tosa cadastrado com sucesso!\n")
     except Exception as e:
-        print("❌ Erro ao salvar o agendamento: ", e)
+        raise ("❌ Erro ao salvar o agendamento: ", e)
 
-
-def salvar_agendamento_banho_tosa(db, agendamento):
-    """
-    Salva um agendamento de banho e tosa no banco.
-    """
-    #db = link["banco"]
-    colecao = db["agendamento_banho_tosa"]
-
-    try:
-        colecao.insert_one(agendamento)
-        print("✅ Agendamento de banho e tosa cadastrado com sucesso!\n")
-    except Exception as e:
-        print("❌ Erro ao salvar o agendamento: ", e)
-
-def salvar_agendamento_clinico(db, agendamento):
-    """
-    Salva um agendamento de banho e tosa no banco.
-    """
-    #db = link["banco"]
-    colecao = db["agendamento_clinico"]
-
-    try:
-        colecao.insert_one(agendamento)
-        print("✅ Agendamento de banho e tosa cadastrado com sucesso!\n")
-    except Exception as e:
-        print("❌ Erro ao salvar o agendamento: ", e)
+# TIPO: 1 == banho e tosa
+# TIPO: 2 == clinico
 
 #   ----- Buscar -----
 def pesquisar_consulta(db, informacao, return_info = False):
@@ -251,18 +224,44 @@ def pesquisar_consulta(db, informacao, return_info = False):
         print("Usuario Não Encontrado")
         return None
 
-def pesquisar_banho_e_tosa_por_nome(db, nome):
-    colecao = db["agendamento_banho_tosa"]
-
-    return colecao.find_one({"cliente": nome})
-
-def listar_clientes(client):
-    db = client["banco"]
-    colecao = db["clientes"]
+def listar_clientes(db):
+    colecao = db["cadastro_clientes"]
 
     return list(colecao.find({}, {"_id": 0}))
 
 # ================= LEGADO =================
+
+# def pesquisar_banho_e_tosa_por_nome(db, nome):
+#     colecao = db["agendamento_banho_tosa"]
+#
+#     return colecao.find_one({"cliente": nome})
+
+# def salvar_agendamento_banho_tosa(db, agendamento):
+#     """
+#     Salva um agendamento de banho e tosa no banco.
+#     """
+#     #db = link["banco"]
+#     colecao = db["agendamento_banho_tosa"]
+#
+#     try:
+#         colecao.insert_one(agendamento)
+#         print("✅ Agendamento de banho e tosa cadastrado com sucesso!\n")
+#     except Exception as e:
+#         print("❌ Erro ao salvar o agendamento: ", e)
+#
+# def salvar_agendamento_clinico(db, agendamento):
+#     """
+#     Salva um agendamento de banho e tosa no banco.
+#     """
+#     #db = link["banco"]
+#     colecao = db["agendamento_clinico"]
+#
+#     try:
+#         colecao.insert_one(agendamento)
+#         print("✅ Agendamento de banho e tosa cadastrado com sucesso!\n")
+#     except Exception as e:
+#         print("❌ Erro ao salvar o agendamento: ", e)
+
 
 #   ----- Atualizar/Excluir -----
 # def atualizar_tutor(link, cpf, novos_dados):
